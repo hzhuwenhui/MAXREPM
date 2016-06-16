@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{21AB04C9-D25F-4398-8DD6-335AEA16884A}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>TZHSWEET.IBLL</RootNamespace>
+    <AssemblyName>TZHSWEET.IBLL</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.Entity" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="IBaseService.cs" />
+    <Compile Include="IApproveService.cs" />
+    <Compile Include="ICategoryService.cs" />
+    <Compile Include="IDictionaryService.cs" />
+    <Compile Include="IDirectorysService.cs" />
+    <Compile Include="ICustomerService.cs" />
+    <Compile Include="IViewTaskService.cs" />
+    <Compile Include="IVModuleProjectService.cs" />
+    <Compile Include="IStaffService.cs" />
+    <Compile Include="IWorkloadService.cs" />
+    <Compile Include="IMemberkService.cs" />
+    <Compile Include="IProgressLogService.cs" />
+    <Compile Include="IPMDepartmentService.cs" />
+    <Compile Include="IFlowLogService.cs" />
+    <Compile Include="IContractService.cs" />
+    <Compile Include="IDocumentsService.cs" />
+    <Compile Include="ITaskService.cs" />
+    <Compile Include="IProjectService.cs" />
+    <Compile Include="IDepartmentService.cs" />
+    <Compile Include="IFavoriteService.cs" />
+    <Compile Include="IModulePermissionService.cs" />
+    <Compile Include="IModuleService.cs" />
+    <Compile Include="IOperateLogService.cs" />
+    <Compile Include="IPermissionService.cs" />
+    <Compile Include="IRolePermissionService.cs" />
+    <Compile Include="IRoleService.cs" />
+    <Compile Include="IUserRoleService.cs" />
+    <Compile Include="IUserService.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TZHSWEET.Common\TZHSWEET.Common.csproj">
+      <Project>{900EE6E9-83A0-4CA1-9616-7990FBBBBE70}</Project>
+      <Name>TZHSWEET.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TZHSWEET.EFDao\TZHSWEET.EFDao.csproj">
+      <Project>{98a00d14-e3c4-473b-a02b-3137a14b3436}</Project>
+      <Name>TZHSWEET.EFDao</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TZHSWEET.Entity\TZHSWEET.Entity.csproj">
+      <Project>{bd0a416d-4f15-49a7-baf8-edd6a0f251c9}</Project>
+      <Name>TZHSWEET.Entity</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TZHSWEET.ViewModel\TZHSWEET.ViewModel.csproj">
+      <Project>{3dfb2906-858a-4290-8989-60f6840a7e16}</Project>
+      <Name>TZHSWEET.ViewModel</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

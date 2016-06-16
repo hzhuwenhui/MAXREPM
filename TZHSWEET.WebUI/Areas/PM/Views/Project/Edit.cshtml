@@ -1,0 +1,389 @@
+﻿@model TZHSWEET.ViewModel.ViewDetailPage
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html >
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>项目明细</title>
+    <!--主框架颜色-->
+    <link href="@Url.Content("~/Content/ligerUI/skins/Aqua/css/ligerui-all.css")" rel="stylesheet" type="text/css" />
+    <!--当前后台(首页)的样式-->
+    <link href="@Url.Content("~/Content/css/common.css")" rel="stylesheet" type="text/css" />
+    <link href="@Url.Content("~/Content/ligerUI/skins/Gray/css/all.css")" rel="stylesheet" />
+    <link href="@Url.Content("~/Content/ligerUI/skins/ligerui-icons.css")" rel="stylesheet" />
+    <!--主框架js-->
+    <script src="@Url.Content("~/Scripts/jquery/jquery-1.5.2.min.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Content/ligerUI/js/ligerui.min.js")" type="text/javascript"></script>
+
+    <!--封装的后台LigerUI友好的各种ajax请求函数-->
+    <script src="@Url.Content("~/Scripts/js/common.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Scripts/js/LG.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Content/json2.js")" type="text/javascript"></script>
+    <!--自己加的js-->
+    <script src="@Url.Content("~/Content/ligerUI/js/plugins/ligerForm.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Content/ligerUI/js/plugins/ligerButton.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Content/ligerUI/js/plugins/ligerGrid.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Content/ligerUI/js/plugins/ligerLayout.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Scripts/jquery-validation/jquery.validate.min.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Scripts/jquery-validation/jquery.metadata.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Scripts/jquery-validation/messages_cn.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Content/jquery.form.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Scripts/js/validator.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Content/ligerUI/js/plugins/ligerTab.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Content/ligerUI/js/plugins/ligerDateEditor.js")" type="text/javascript"></script>
+</head>
+<body style="overflow:hidden; padding-top:20px;">
+    <div style="margin:auto 490px; text-align:left; font-family:微软雅黑;font-size:larger;">
+        <input id="btn1" type="button" value="保存" style="width:70px;">
+        <input id="btn2" type="button" value="修改" style="width:70px;">
+        <input id="btn3" type="button" value="提交" style="width:70px;">
+    </div>
+    <div id="detail" style="display:none;"><form id="taskform" method="post"></form></div>
+    <div id="tabcontainer" style="margin:10px; width:auto; height:auto; overflow:visible; border: 1px solid #D3D3d3;" class="liger-tab l-tab">
+        <div title="基本信息" tabid="mainmenu">
+            <form id="mainform">
+            </form>
+        </div>
+        <div title="任务列表" tabid="tasklist">
+            <div id="taskgrid"></div>
+        </div>
+        <div title="文档列表" tabid="doclist">
+            <div id="docgrid">文档列表</div>
+        </div>
+        <div title="组员列表" tabid="menberlist">
+            <div id="menbergrid">组员列表</div>
+        </div>
+        <div title="合同列表" tabid="contractlist">
+            <div id="contractgrid">合同列表</div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        //系统权限架构的LG.js必需使用的变量。（请勿随便更改或删除）
+        var rootPath = '@Url.Content("~/Admin/")';
+        var rootPath1 = '@Url.Content("~/PM/")';
+        //当前ID
+        var currentID = '@ViewBag.CurrentID';
+        //是否查看状态
+        var isView = '@ViewBag.IsView';
+
+        //覆盖本页面grid的loading效果
+        LG.overrideGridLoading();
+
+        //表单底部按钮
+        LG.setFormDefaultBtn(f_cancel, submitform);
+        //创建tab选项卡控件
+        var tab = $("#tabcontainer").ligerTab();
+
+        //创建表单结构
+        var mainform = $("#mainform");
+        mainform.ligerForm({
+            inputWidth: 220, labelWidth: 100, space: 30,
+            fields: [
+            { name: "ID", type: "hidden" },
+            { display: "项目编号", name: "ProjectCode", type: "text", validate: { maxlength: 50 } },
+            { display: "项目名称", name: "ProjectName", type: "text", validate: { maxlength: 50 } },
+            {
+                display: "项目类型", name: "CategoryID", newline: true,  width: 120, type: "select", comboboxName: "CategoryName",
+                options: { valueFieldID: "CategoryID", url: rootPath1 + "Project/GetProjectTypeSelect", isMultiSelect: false }
+            },
+            {
+                display: "项目级别", name: "ProjectLevel", newline: true, width: 120,  type: "select", comboboxName: "LevelName",
+                options: { valueFieldID: "ProjectLevel", data: [{ id: 0, text: '低级' }, { id: 1, text: '中级' }, { id: 2, text: '高级' }], textField: 'text', isMultiSelect: false }
+            },
+            { display: "项目地址", name: "ProjectAddress", width: 520, type: "text" },
+            {
+                display: "项目负责人", name: "LeaderName", newline: true, labelWidth: 100, width: 120, space: 30,
+                type: 'select', options: {}
+            },
+            { display: "项目负责人ID", name: "LeaderID", type: "hidden" },
+
+            {
+                display: "客户名称", name: "CustomerName", newline: true, labelWidth: 100, width: 120, space: 30,
+                type: "select", options: {}
+            },
+            { display: "客户名称ID", name: "CustomerID", type: "hidden" },
+
+            {
+                display: "项目状态", name: "ProjectStatus", type: "select", comboboxName: "statusName", options: {
+                    valueFieldID: "ProjectStatus", data: [{ id: 0, text: '正常' }, { id: 1, text: '已停止' }, { id: 2, text: '已挂起' }], textField: 'text', isMultiSelect: false
+                }
+            },
+
+            { display: "实际完成日期", name: "DeliveryDate", type: "date" },
+            {
+                display: "是否超时", name: "IsTimeOut", newline: false, type: "select", comboboxName: "IsTimeOutName", options: {
+                    valueFieldID: "IsTimeOut", data: [{ id: 'false', text: '否' }, { id: 'true', text: '是' }], isMultiSelect: false, textField: 'text'
+                },
+                validate: { required: true }
+            },
+            { display: "开始日期", name: "PlancycleStartdate", type: "date", options: { format: "yyyy-MM-dd" } },
+            { display: "结束日期", name: "PlancycleEnddate", newline: false, type: "date", options: { format: "yyyy-MM-dd" } },
+
+            { display: "项目概述", name: "ProjectProfile", newline: true, width: 520, type: "textarea" },
+            { display: "预算总金额", name: "TotalBudget", type: "text" }
+            ],buttons:[
+                { text:"保存", width: 60, click: submitform }
+            ],
+            toJSON: JSON2.stringify
+        });
+
+        var actionRoot = '@Url.Content("~/PM/Project/")';
+
+        LG.loadForm(mainform, { url: actionRoot + 'Get', data: { ID: currentID ? currentID : 0 } }, f_loaded);
+
+        function f_loaded() {
+            if (!isView) return;
+            //查看状态，控制不能编辑
+            $("input,select,textarea", mainform).attr("readonly", "readonly");
+        }
+
+        function f_cancel() {
+            var win = parent || window;
+            win.LG.closeCurrentTab(null);
+        }
+
+        function submitform()
+        {
+            alert("你点击了保存按钮！");
+        }
+
+        //加载任务列表
+        var taskgridcolumns = [
+            { display: "任务ID", name: "ID", hide: true },
+            { display: "任务名称", name: "TaskName", width: 100 },
+            { display: "项目ID", name: "ProjectID", hide: true },
+            { display: "任务进度", name: "TaskProgress", hide: true },
+            { display: "任务级别", name: "TaskLevel", hide: true },
+            { display: "任务概述", name: "TaskProfile", hide: true },
+            { display: "任务负责人ID", name: "LeaderUserID", hide: true },
+            { display: "任务负责人", name: "LeaderUserName", align: 'left', width: 120 },
+            { display: "任务状态", name: "TaskState", width: 70 },
+            { display: "任务工期", name: "TaskDuration", width: 120 },
+            { display: "开始日期", name: "TaskStartDate", width: 120,type:"date" },
+            { display: "结束日期", name: "TaskEndDate", width: 120, type: "date" },
+            { display: "是否超时", name: "IsTimeOut", hide: true },
+        ];
+
+        var actionRoot1='@Url.Content("~/PM/Task/")';
+        var taskgrid = $("#taskgrid").ligerGrid({
+            columns:taskgridcolumns,
+            dataAction: 'server',
+            pageSize: 20,
+            toolbar: {
+                items: [
+                    { text: '增加', click: addtask, icon: 'add' },
+                    { line: true },
+                    { text: '修改', click: updatetask, icon: 'modify' },
+                    { line: true },
+                    { text: '删除', click: deletetask, icon: 'delete' }
+                ]
+            },
+            sortName:'ID',
+            url:actionRoot1+'GetTaskForGrid',
+            width: '100%', heightDiff: -10, checkbox: false
+        });
+
+        //任务弹出窗口开始
+        var detailWin = null, curentData = null;
+        function showForm(data, isAddNew) {
+            curentData = data;
+            if ($("#ID").val() == data.ID) {
+                detailWin.show();
+            }
+            else {
+                //创建表单结构
+                var tform = $("#taskform").ligerForm({
+                    inputWidth: 280,
+                    right: 100,
+                    fields: [
+                      { name: "TaskID", type: "hidden" },
+                      { display: "项目编号", name: "ProjectID", newline: true, labelWidth: 100, width: 170, space: 50, type: "text", validate: { maxlength: 50 } },
+                      { display: "项目名称", name: "ProjectName", newline: true, labelWidth: 100, width: 300, space: 50, type: "text", validate: { maxlength: 500 } },
+                      { display: "任务负责人", name: "LeaderUserID", newline: true, labelWidth: 100, width: 170, space: 50, type: "text" },
+                      { display: "任务状态", name: "TaskState", newline: true, labelWidth: 100, width: 100, space: 30, type: "text" },
+                      { display: "是否超时", name: "IsTimeOut", newline: true, labelWidth: 100, width: 100, space: 50, type: "text" },
+                      { display: "任务级别", name: "TaskLevel", newline: true, labelWidth: 100, width: 100, space: 50, type: "text" },
+                      { display: "任务工期", name: "TaskDuration", newline: true, labelWidth: 100, width: 100, space: 50, type: "text" },
+                      { display: "实际完成日期", name: "TaskCompleteDate", newline: true, labelWidth: 100, width: 100, space: 50, type: "date" },
+                      { display: "任务进度", name: "TaskProgress", newline: true, labelWidth: 100, width: 100, space: 50, type: "text" },
+                      { display: "项目描述", name: "TaskProfile", newline: true, labelWidth: 100, width: 300, space: 50, type: "textarea" },
+                      { display: "开始日期", name: "TaskStartDate", newline: true, labelWidth: 100, width: 170, space: 50, type: "date", format: 'yyyy-MM-dd' },
+                      { display: "结束日期", name: "TaskEndDate", newline: true, labelWidth: 100, width: 170, space: 50, type: "date", format: 'yyyy-MM-dd' },
+                    ],
+                    toJSON: JSON2.stringify
+                });
+
+                detailWin = $.ligerDialog.open({
+                    target: $("#detail"),
+                    width: 500, height: 400, top: 20,
+                    title: isAddNew ? "任务添加" : "任务修改",
+                    buttons: [
+                    { text: '确定', onclick: function () { save(); } },
+                    { text: '取消', onclick: function () { detailWin.hide(); } }
+                    ]
+                });
+
+                //如果curentData有数据，则把数据填充到页面上相应的控件中
+                if (curentData) {
+                    $("#ID").val(curentData.ID);
+                    $("#ProjectID").val(curentData.ProjectID);
+                    $("#ProjectName").val(curentData.ProjectName);
+                    $("#LeaderUserID").val(curentData.LeaderUserID);
+                    $("#TaskState").val(curentData.ProjectStatus);
+                    $("#IsTimeOut").val(curentData.IsTimeOut);
+                    $("#TaskProfile").val(curentData.task_content);
+                    $("#TaskEndDate").val(curentData.end_date);
+                    $("#TaskStartDate").val(curentData.star_tdate);
+                    $("#CreateUserID").val(curentData.CreateUserID);
+                    $("#CreateDate").val(curentData.CreateUserID);
+                    $("#TaskLevel").val(curentData.TaskLevel);
+                    $("#TaskDuration").val(curentData.TaskDuration);
+                    $("#TaskCompleteDate").val(curentData.TaskCompleteDate);
+                    $("#TaskProgress").val(curentData.TaskProgress);
+                }
+
+
+                //保存按钮
+                function save() {
+                    curentData = curentData || {};
+                    curentData.ProjectID = $("#ProjectID").val();
+                    curentData.ProjectName = $("#ProjectName").val();
+                    curentData.LeaderUserID = $("#LeaderUserID").val();
+                    curentData.TaskState = $("#TaskState").val();
+                    curentData.IsTimeOut = $("#IsTimeOut").val();
+                    curentData.TaskProfile = $("#TaskProfile").val();
+                    curentData.TaskEndDate = $("#TaskEndDate").val();
+                    curentData.TaskStartDate = $("#TaskStartDate").val();
+                    curentData.CreateUserID = $("#CreateUserID").val();
+                    curentData.CreateDate = $("#CreateDate").val();
+                    curentData.TaskLevel = $("#TaskLevel").val();
+                    curentData.TaskDuration = $("#TaskDuration").val();
+                    curentData.TaskCompleteDate = $("#TaskCompleteDate").val();
+                    curentData.TaskProgress = $("#TaskProgress").val();
+                    LG.ajax({
+                        url: isAddNew ? "Add" : "Update",
+                        data: curentData,
+                        success: function () {
+                            grid.loadData();
+                            LG.tip('保存成功!');
+                            window.detailWin.hide();
+                            if (success) {
+                                success();
+                            }
+                        },
+                        error: function (message) {
+                            LG.tip(message);
+                        }
+                    });
+                }
+            }
+        }
+        //任务弹出窗口结束
+
+        //增加任务按钮
+        function addtask() {
+            //showForm({ ID: 0 }, true);
+            top.f_addTab(null, '新增任务明细', '../../PM/Task/Detail?IsView=1&ID=0');
+        }
+        //修改任务按钮
+        function updatetask() {
+            var selected = taskgrid.getSelected();
+            if (!selected) { LG.tip('请选择行!'); return }
+            showForm({
+                ProjectID: selected.ProjectID,
+                LeaderUserID: selected.LeaderUserID,
+                TaskProfile: selected.TaskProfile,
+                TaskState: selected.TaskState,
+                TaskStartDate: selected.TaskStartDate,
+                TaskEndDate: selected.TaskEndDate,
+                IsTimeOut: selected.IsTimeOut,
+                CreateUserID: selected.CreateUserID,
+                CreateDate: selected.CreateDate,
+                TaskLevel: selected.TaskLevel,
+                TaskDuration: selected.TaskDuration,
+                TaskCompleteDate: selected.TaskCompleteDate,
+                TaskProgress: selected.TaskProgress,
+                ID: selected.ID
+            }, false);
+        }
+        //删除任务按钮
+        function deletetask() {
+            var selected = taskgrid.getSelected();
+            if (!selected) { LG.tip('请选择行!'); return }
+            jQuery.ligerDialog.confirm('确定删除吗?', function (confirm) {
+                if (confirm)
+                    f_delete();
+            });
+        }
+
+        $.ligerui.get("LeaderName").set('onBeforeOpen', f_selectContact)
+        $.ligerui.get("CustomerName").set('onBeforeOpen', f_selectCustomer)
+        @*弹出框效果开始*@
+        //选择负责人
+        function f_selectContact() {
+            $.ligerDialog.open({
+                title: '选择项目负责人', name: 'winselector',
+                width: 700, height: 300,
+                url: rootPath1 + 'Staff/SelectStaff',
+                buttons: [
+                    { text: '确定', onclick: f_selectContactOK },
+                    { text: '取消', onclick: f_selectCancel }
+                ]
+            });
+            return false;
+        }
+
+        function f_selectContactOK(item, dialog) {
+            var fn = dialog.frame.f_select || dialog.frame.window.f_select;
+            var data = fn();
+            if (!data) {
+                alert('请选择行!');
+                return;
+            }
+            else {
+                $("#LeaderID").val(data.ID);
+                $("#LeaderName").val(data.FullName);
+            }
+
+            dialog.close();
+        }
+
+        //选择客户
+        function f_selectCustomer() {
+            $.ligerDialog.open({
+                title: '选择项客户', name: 'winselector',
+                width: 700, height: 300,
+                url: rootPath1 + 'Customer/SelectCustomer',
+                buttons: [
+                    { text: '确定', onclick: f_selectCustomerOK },
+                    { text: '取消', onclick: f_selectCancel }
+                ]
+            });
+            return false;
+        }
+
+
+        function f_selectCustomerOK(item, dialog) {
+            var fn = dialog.frame.f_select || dialog.frame.window.f_select;
+            var data = fn();
+            if (!data) {
+                alert('请选择行!');
+                return;
+            }
+            else {
+                $("#CustomerID").val(data.ID);
+                $("#CustomerName").val(data.CustomerName);
+            }
+
+            dialog.close();
+        }
+
+        function f_selectCancel(item, dialog) {
+            dialog.close();
+        }
+        @*弹出框效果结束*@
+    </script>
+</body>
+</html>

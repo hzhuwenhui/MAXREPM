@@ -1,0 +1,250 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>我的任务</title> 
+    <!--主框架颜色-->
+    <link href=" @Url.Content("~/Content/ligerUI/skins/Aqua/css/ligerui-all.css") " rel="stylesheet" type="text/css" />
+    <!--当前后台(首页)的样式-->
+    <link href="@Url.Content("~/Content/css/common.css")" rel="stylesheet" type="text/css" />
+    <!--主框架js-->
+    <script src="@Url.Content("~/Scripts/jquery/jquery-1.5.2.min.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Content/ligerUI/js/ligerui.min.js")" type="text/javascript"></script>
+    <!--封装的后台LigerUI友好的各种ajax请求函数-->
+    <script src="@Url.Content("~/Scripts/js/LG.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Scripts/js/common.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Scripts/js/ligerui.expand.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Content/json2.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Content/ligerUI/js/plugins/ligerDialog.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Content/ligerUI/js/plugins/ligerDateEditor.js")" type="text/javascript"></script>
+    </head>
+<body style="padding:10px;height:100%; text-align:center;">
+    <ipnut type="hidden" id="MenuNo" value="Task" />
+    <div id="detail" style="display:none;"><form id="mainform" method="post"></form> </div>
+    <div id="mainsearch" style=" width:98%">
+        <div class="searchtitle">
+            <span>搜索</span><img src="@Url.Content("~/Content/icons/32X32/searchtool.gif")" />
+            <div class="togglebtn"></div> 
+        </div>
+        <div class="navline" style="margin-bottom:4px; margin-top:4px;"></div>
+        <div class="searchbox">
+            <form id="formsearch" class="l-form"></form> 
+        </div>
+    </div>
+    <div id="maingrid"></div>
+  <script type="text/javascript">
+    
+      //相对路径
+      var rootPath = "@Url.Content("~/Admin/")";
+      var columns=[
+            { display: "任务ID", name: "ID", hide: true },
+            { display: "项目编号", name: "ProjectID", width: 100 },
+            { display: "项目名称", name: "ProjectName", width: 300 },
+            { display: "负责人ID", name: "LeaderUserID", align: 'left', width: 100 },
+            { display: "负责人", name: "Leader_UserName", hide: true },
+            { display: "任务状态", name: "TaskState", width: 120 },
+            { display: "开始日期", name: "TaskStartDate", type: "date", width: 120,format:'yyyy-mm-dd' },
+            { display: "结束日期", name: "TaskEndDate", type: "date", width: 120, format: 'yyyy-mm-dd' },
+            { display: "创建人", name: "CreateUserID", align: 'left', width: 120 },
+            { display: "创建日期", name: "CreateDate", hide: true },
+            { display: "任务级别", name: "TaskLevel", hide: true },
+            { display: "任务工期", name: "TaskDuration", hide: true },
+            { display: "实际完成日期", name: "TaskCompleteDate", hide: true },
+            { display: "任务进度", name: "TaskProgress", width: 60 },
+            { display: "是否超时", name: "IsTimeOut", width: 60 }
+
+      ];
+      
+
+      //列表结构
+      var grid = $("#maingrid").ligerGrid({
+          columns: columns, dataAction: 'server', pageSize: 20, toolbar: {},
+          url: 'GetTaskForGrid', sortName: 'ID',
+          width: '98%', height: '100%', heightDiff: -10, checkbox: false
+      });
+      
+
+      //双击事件
+      LG.setGridDoubleClick(grid, 'modify');
+      
+      //搜索表单应用ligerui样式
+      $("#formsearch").ligerForm({
+		   fields:[],
+		   appendID:false,
+		   toJSON: JSON2.stringify 
+	  });
+      
+      //增加搜索按钮,并创建事件
+      LG.appendSearchButtons("#formsearch", grid);
+
+      //加载toolbar
+      LG.loadToolbar(grid, toolbarBtnItemClick);
+      var win = null;
+      //工具条事件
+      function toolbarBtnItemClick(item) {
+          switch (item.id) {
+              case "New":
+                  top.f_addTab(null, '新增任务明细', '../../PM/Task/Detail?IsView=1&ID=' + selected.ID);
+                  break;
+              case "Detail":
+                  var selected = grid.getSelected();
+                  if (!selected) { LG.tip('请选择行!'); return }
+                  top.f_addTab(null, '查看任务明细', '../../PM/Task/Detail?IsView=1&ID=' + selected.ID);
+                  break;
+              case "Update":
+                  var selected = grid.getSelected();
+                  if (!selected) { LG.tip('请选择行!'); return }
+                  showForm({
+                        ProjectID:selected.ProjectID,
+                        LeaderUserID: selected.LeaderUserID,
+                        TaskProfile: selected.TaskProfile,
+                        TaskState: selected.TaskState,
+                        TaskStartDate: selected.TaskStartDate,
+                        TaskEndDate: selected.TaskEndDate,
+                        IsTimeOut: selected.IsTimeOut,
+                        CreateUserID: selected.CreateUserID,
+                        CreateDate: selected.CreateDate,
+                        TaskLevel: selected.TaskLevel,
+                        TaskDuration: selected.TaskDuration,
+                        TaskCompleteDate: selected.TaskCompleteDate,
+                        TaskProgress: selected.TaskProgress,
+                        ID: selected.ID
+                  }, false);
+                  break;
+              case "Delete":
+                  jQuery.ligerDialog.confirm('确定删除吗?', function (confirm) {
+                      if (confirm)
+                          f_delete();
+                  });
+                  break;
+          }
+      }
+
+      function f_reload() {
+          grid.loadData();
+      }
+      function f_delete() {
+          var selected = grid.getSelected();
+          if (selected) {
+              LG.ajax({
+                  url: 'Delete',
+                  loading: '正在删除中...',
+                  data: { ID: selected.ID },
+                  success: function () {
+                      LG.showSuccess('删除成功');
+                      f_reload();
+                  },
+                  error: function (message) {
+                      LG.showError(message);
+                  }
+              });
+          }
+          else {
+              LG.tip('请选择行!');
+          }
+      }
+
+      //弹出窗口开始
+      var detailWin = null, curentData = null;
+      function showForm(data, isAddNew) {
+          curentData = data;
+          if ($("#ID").val()==data.ID ){
+              detailWin.show();
+          }
+          else {
+              //创建表单结构
+              var mainform = $("#mainform");
+              mainform.ligerForm({
+                  inputWidth: 280,
+                  right:100,
+                  fields: [
+                    { name: "ID", type: "hidden" },
+                    { display: "项目编号", name: "ProjectID", newline: true, labelWidth: 100, width: 170, space: 50, type: "text", validate: { maxlength: 50 } },
+                    { display: "项目名称", name: "ProjectName", newline: true, labelWidth: 100, width: 300, space: 50, type: "text", validate: { maxlength: 500 } },
+                    { display: "任务负责人", name: "LeaderUserID", newline: true, labelWidth: 100, width: 170, space: 50, type: "text" },
+                    { display: "任务状态", name: "TaskState", newline: true, labelWidth: 100, width: 100, space: 30, type: "text" },
+                    { display: "是否超时", name: "IsTimeOut", newline: true, labelWidth: 100, width: 100, space: 50, type: "text" },
+                    { display: "任务级别", name: "TaskLevel", newline: true, labelWidth: 100, width: 100, space: 50, type: "text" },
+                    { display: "任务工期", name: "TaskDuration", newline: true, labelWidth: 100, width: 100, space: 50, type: "text" },
+                    { display: "实际完成日期", name: "TaskCompleteDate", newline: true, labelWidth: 100, width: 100, space: 50, type: "date" },
+                    { display: "任务进度", name: "TaskProgress", newline: true, labelWidth: 100, width: 100, space: 50, type: "text" },
+                    { display: "项目描述", name: "TaskProfile", newline: true, labelWidth: 100, width: 300, space: 50, type: "textarea" },
+                    { display: "开始日期", name: "TaskStartDate", newline: true, labelWidth: 100, width: 170, space: 50, type: "date",format:'yyyy-MM-dd'},
+                    { display: "结束日期", name: "TaskEndDate", newline: true, labelWidth: 100, width: 170, space: 50, type: "date", format: 'yyyy-MM-dd' },
+                  ],
+                  toJSON: JSON2.stringify
+              });
+
+              detailWin = $.ligerDialog.open({
+                  target: $("#detail"),
+                  width: 500, height: 400, top: 20,
+                  title: isAddNew ? "任务添加" : "任务修改",
+                  buttons: [
+                  { text: '确定', onclick: function () { save(); } },
+                  { text: '取消', onclick: function () { detailWin.hide(); } }
+                  ]
+              });
+                            
+              //如果curentData有数据，则把数据填充到页面上相应的控件中
+              if (curentData) {
+                  $("#ID").val(curentData.ID);
+                  $("#ProjectID").val(curentData.ProjectID);
+                  $("#ProjectName").val(curentData.ProjectName);
+                  $("#LeaderUserID").val(curentData.LeaderUserID);
+                  $("#TaskState").val(curentData.ProjectStatus);
+                  $("#IsTimeOut").val(curentData.IsTimeOut);
+                  $("#TaskProfile").val(curentData.task_content);
+                  $("#TaskEndDate").val(curentData.end_date);
+                  $("#TaskStartDate").val(curentData.star_tdate);
+                  $("#CreateUserID").val(curentData.CreateUserID);
+                  $("#CreateDate").val(curentData.CreateUserID);
+                  $("#TaskLevel").val(curentData.TaskLevel);
+                  $("#TaskDuration").val(curentData.TaskDuration);
+                  $("#TaskCompleteDate").val(curentData.TaskCompleteDate);
+                  $("#TaskProgress").val(curentData.TaskProgress);
+              }
+
+              
+              //保存按钮
+              function save() {
+                  curentData = curentData || {};
+                  curentData.ProjectID = $("#ProjectID").val();
+                  curentData.ProjectName = $("#ProjectName").val();
+                  curentData.LeaderUserID = $("#LeaderUserID").val();
+                  curentData.TaskState = $("#TaskState").val();
+                  curentData.IsTimeOut = $("#IsTimeOut").val();
+                  curentData.TaskProfile = $("#TaskProfile").val();
+                  curentData.TaskEndDate = $("#TaskEndDate").val();
+                  curentData.TaskStartDate = $("#TaskStartDate").val();
+                  curentData.CreateUserID = $("#CreateUserID").val();
+                  curentData.CreateDate = $("#CreateDate").val();
+                  curentData.TaskLevel = $("#TaskLevel").val();
+                  curentData.TaskDuration = $("#TaskDuration").val();
+                  curentData.TaskCompleteDate = $("#TaskCompleteDate").val();
+                  curentData.TaskProgress = $("#TaskProgress").val();
+                  LG.ajax({
+                      url: isAddNew ? "Add" : "Update",
+                      data: curentData,
+                      success: function () {
+                          grid.loadData();
+                          LG.tip('保存成功!');
+                          window.detailWin.hide();
+                          if (success) {
+                              success();
+                          }
+                      },
+                      error: function (message) {
+                          LG.tip(message);
+                      }
+                  });
+              }
+          }
+      }
+      //弹出窗口结束
+
+  </script>
+</body>
+</html>
